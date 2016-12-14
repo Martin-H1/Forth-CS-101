@@ -1,45 +1,80 @@
-20 CONSTANT MAXITER
+\ Setup constants to remove magic numbers to allow
+\ for greater zoom with different scale factors.
+20  CONSTANT MAXITER
+-39 CONSTANT MINVAL
+40  CONSTANT MAXVAL
+20  CONSTANT RESCALE
+80  CONSTANT S_ESCAPE
 
+\ These variables hold values during the escape calculation.
 VARIABLE CREAL
 VARIABLE CIMAG
 VARIABLE ZREAL
 VARIABLE ZIMAG
 VARIABLE COUNT
 
-20 LET C$ = " .,'~!^:;[/<&?oxOX#  "
+\ Compute squares, but rescale to remove extra scaling factor.
+: ZR_SQ ZREAL @ DUP RESCALE */ ;
+: ZI_SQ ZIMAG @ DUP RESCALE */ ;
 
-: ZM ZREAL @ DUP * ;
-: ZN ZIMAG @ DUP * ;
-: ZL ZM ZN + ;
+\ Translate escape count to ascii greyscale.
+: .CHAR
+  S" . .,'~!^:;[/<&?oxOX#  "
+  DROP
+  SWAP + 1
+  TYPE ;
 
-: .CELL
-170 PRINT MID$(C$, 1 + COUNT, 1);
+\ Numbers above 4 will always escape, so compare to a scaled value.
+: ESCAPES?
+  S_ESCAPE > ;
 
+\ Increment count and compare to max iterations.
+: COUNT_AND_TEST?
+  COUNT @ 1+ DUP COUNT !
+  MAXITER > ;
+
+\ stores the row column values from the stack for the escape calculation.
+: INIT_VARS
+  DUP CREAL ! ZREAL !
+  DUP CIMAG ! ZIMAG !
+  1 COUNT ! ;
+
+\ Performs a single iteration of the escape calculation.
+: DOESCAPE
+    ZR_SQ ZI_SQ +
+    ESCAPES? IF
+      TRUE
+    ELSE
+      ZR_SQ ZI_SQ - CREAL @ +   \ leave result on stack
+      ZREAL @ ZIMAG @ RESCALE */ 2*
+      CIMAG @ + ZIMAG !
+      ZREAL !                   \ Store stack item into ZREAL
+      COUNT_AND_TEST?
+    THEN ;
+
+\ Iterates on a single cell to compute its escape factor.
 : DOCELL
-  20 / CREAL !
-  20 / CIMAG !
-  CREAL @ ZREAL !
-  CIMAG @ ZIMAG !
-  1 COUNT !
+  INIT_VARS
   BEGIN
-    ZM ZN ZL
-110 IF ZL > 4 THEN GOTO 170
-120 ZR2 = ZM - ZN + CREAL
-130 ZIMAG = ZREAL * ZIMAG * 2 + CIMAG
-140 ZREAL = ZR2
-    COUNT @ 1 + DUP COUNT !
-    MAXITER >
+    DOESCAPE
   UNTIL
-  .CELL ;
+  COUNT @
+  .CHAR ;
 
+\ For each cell in a row.
 : DOROW
-  40 -39 DO
-    ." X = " I . CR
-    ." Y = " DUP . CR
+  MAXVAL MINVAL DO
+    DUP I
+    DOCELL
   LOOP
   DROP ;
 
+\ For each row in the set.
 : MANDLEBROT
-  40 -39 DO
+  CR
+  MAXVAL MINVAL DO
     I DOROW CR
   LOOP ;
+
+\ Run the computation.
+MANDLEBROT
