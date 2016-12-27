@@ -19,7 +19,7 @@ VARIABLE COUNT
 
 \ Translate escape count to ascii greyscale.
 : .CHAR
-  S" . .,'~!^:;[/<&?oxOX#  "
+  S" ..,'~!^:;[/<&?oxOX#  "
   DROP
   SWAP + 1
   TYPE ;
@@ -46,7 +46,7 @@ VARIABLE COUNT
       TRUE
     ELSE
       ZR_SQ ZI_SQ - CREAL @ +   \ leave result on stack
-      ZREAL @ ZIMAG @ RESCALE */ 2 *
+      ZREAL @ ZIMAG @ RESCALE */ 1 lshift
       CIMAG @ + ZIMAG !
       ZREAL !                   \ Store stack item into ZREAL
       COUNT_AND_TEST?
