@@ -3,8 +3,8 @@
 20  CONSTANT MAXITER
 -39 CONSTANT MINVAL
 40  CONSTANT MAXVAL
-20  CONSTANT RESCALE
-80  CONSTANT S_ESCAPE
+20 5 lshift CONSTANT RESCALE
+RESCALE 4 * CONSTANT S_ESCAPE
 
 \ These variables hold values during the escape calculation.
 VARIABLE CREAL
@@ -35,8 +35,8 @@ VARIABLE COUNT
 
 \ stores the row column values from the stack for the escape calculation.
 : INIT_VARS
-  DUP CREAL ! ZREAL !
-  DUP CIMAG ! ZIMAG !
+  5 lshift DUP CREAL ! ZREAL !
+  5 lshift DUP CIMAG ! ZIMAG !
   1 COUNT ! ;
 
 \ Performs a single iteration of the escape calculation.
