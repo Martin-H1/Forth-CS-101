@@ -20,8 +20,7 @@ VARIABLE COUNT
 \ Translate escape count to ascii greyscale.
 : .CHAR
   S" ..,'~!^:;[/<&?oxOX#  "
-  DROP
-  SWAP + 1
+  DROP + 1
   TYPE ;
 
 \ Numbers above 4 will always escape, so compare to a scaled value.
@@ -41,11 +40,12 @@ VARIABLE COUNT
 
 \ Performs a single iteration of the escape calculation.
 : DOESCAPE
-    ZR_SQ ZI_SQ +
+    ZR_SQ ZI_SQ 2DUP +
     ESCAPES? IF
+      2DROP
       TRUE
     ELSE
-      ZR_SQ ZI_SQ - CREAL @ +   \ leave result on stack
+      - CREAL @ +   \ leave result on stack
       ZREAL @ ZIMAG @ RESCALE */ 1 lshift
       CIMAG @ + ZIMAG !
       ZREAL !                   \ Store stack item into ZREAL
