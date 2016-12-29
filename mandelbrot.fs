@@ -70,11 +70,11 @@ VARIABLE COUNT
   DROP ;
 
 \ For each row in the set.
-: MANDLEBROT
+: MANDELBROT
   CR
   MAXVAL MINVAL DO
     I DOROW CR
   LOOP ;
 
 \ Run the computation.
-MANDLEBROT
+MANDELBROT
