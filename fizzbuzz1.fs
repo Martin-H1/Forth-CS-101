@@ -1,6 +1,6 @@
-; I watched this Tom Scott video: https://www.youtube.com/watch?v=QPZ0pIK_wsc
-; and realized it was the perfect example of a CS-101 Forth problem. So I did
-; it two different ways. This is the more straight foreward way:
+\ I watched this Tom Scott video: https://www.youtube.com/watch?v=QPZ0pIK_wsc
+\ and realized it was the perfect example of a CS-101 Forth problem. So I did
+\ it two different ways. This is the more straight foreward way:
 
 : FIZZ?  ( n -- flag)
   3 MOD 0= ;
