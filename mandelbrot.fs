@@ -19,7 +19,7 @@ VARIABLE COUNT
 
 \ Translate escape count to ascii greyscale.
 : .CHAR
-  S" ..,'~!^:;[/<&?oxOX#  "
+  S" ..,'~!^:;[/<&?oxOX#   "
   DROP + 1
   TYPE ;
 
