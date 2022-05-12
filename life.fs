@@ -16,19 +16,35 @@ variable col
 
 : rowFirst 0 row ! ;
 
-: row+
+: rowNext
     1 row +! ;
 
 : rowAtEnd?
     row @ height >= ;
 
+\ Returns index of the row after current using wrap around.
+: row+ ( -- index )
+    row @ 1 + height mod ;
+
+\ Returns index of the column before current using wrap around.
+: row- ( -- index )
+    row @ 1 - height mod ;
+
 : colFirst 0 col ! ;
 
-: col+
+: colNext
     1 col +! ;
 
-: colatEnd?
+: colAtEnd?
     col @ width >= ;
+
+\ Returns index of the column after current using wrap around.
+: col+ ( -- index )
+    col @ 1 + width mod ;
+
+\ Returns index of the column before current using wrap around.
+: col- ( -- index )
+    col @ 1 - width mod ;
 
 \ moves bytes from next gen to current.
 : moveCurr ( -- )
@@ -52,21 +68,21 @@ variable col
         dup '|' <> if
             32 <> 1 and
             col @ row @ curr!
-	    col+
+	    colNext
 	else
 	    drop
-	    row+
+	    rowNext
 	    colFirst
 	then
 	1+
 	next
     drop ;
 
-\ prints the i row from the current generation to output
+\ prints the row from the current generation to output
 : .currRow ( row -- )
     colFirst
     begin
-        col @ over curr@ . col+ colAtEnd?
+        col @ over curr@ . colNext colAtEnd?
     until
     drop ;
 
@@ -74,7 +90,7 @@ variable col
 : .curr
     rowFirst
     begin
-        cr row @ .currRow row+ rowAtEnd?
+        cr row @ .currRow rowNext rowAtEnd?
     until
     cr ;
 
@@ -88,6 +104,10 @@ variable col
 \ stores a cell into the next generation
 : next! ( n col row -- )
     width * + gen_next + c! ;
+
+: calcCell ;
+: calcRow ;
+: calcGen ;
 
 : life
     ;
