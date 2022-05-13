@@ -10,7 +10,7 @@ height width * constant size
 create gen_curr size allot
 create gen_next size allot
 
-\ iterators and successor functions
+\ iterators and their associated operators
 variable row
 variable col
 
@@ -21,6 +21,14 @@ variable col
 
 : rowAtEnd?
     row @ height >= ;
+
+: rowForEach ( token -- )
+    >r
+    rowFirst
+    begin
+	r@ execute rowNext rowAtEnd?
+    until
+    rdrop ;
 
 \ Returns index of the row after current using wrap around.
 : row+ ( -- index )
@@ -37,6 +45,14 @@ variable col
 
 : colAtEnd?
     col @ width >= ;
+
+: colForEach ( token -- )
+    >r
+    colFirst
+    begin
+	r@ execute colNext colAtEnd?
+    until
+    rdrop ;
 
 \ Returns index of the column after current using wrap around.
 : col+ ( -- index )
@@ -75,25 +91,25 @@ variable col
 	    colFirst
 	then
 	1+
-	next
+    next
     drop ;
 
+: .cell ( row -- )
+    col @ over curr@ . ;
+
 \ prints the row from the current generation to output
-: .currRow ( row -- )
-    colFirst
-    begin
-        col @ over curr@ . colNext colAtEnd?
-    until
+: .currRow ( -- )
+    cr row @
+    ['] .cell colForEach
     drop ;
 
 \ Prints the current board generation to standard output
 : .curr
-    rowFirst
-    begin
-        cr row @ .currRow rowNext rowAtEnd?
-    until
+    ['] .currRow
+    rowForEach
     cr ;
 
+\ clears next array for the subsequent generation computation
 : nextErase ( -- )
     gen_next size erase ;
 
@@ -105,11 +121,46 @@ variable col
 : next! ( n col row -- )
     width * + gen_next + c! ;
 
-: calcCell ;
-: calcRow ;
-: calcGen ;
+\ computes the sum of the neigbors of the current cell.
+: calcSum ( -- n )
+   col-  row-  curr@
+   col @ row-  curr@ +
+   col+  row-  curr@ +
+   col-  row @ curr@ +
+   col+  row @ curr@ +
+   col-  row+  curr@ +
+   col @ row+  curr@ +
+   col+  row+  curr@ + ;
 
-: life
+: calcCell ( -- )
+    calcSum
+
+    \ The board was initialized to zeros. So unless explicitly marked live,
+    \ all cells die in the next generation. There are two rules we'll apply
+    \ to mark a cell live.
+
+    \ Is the current cell dead?
+    col @ row @ curr@ 0=
+    if
+        \ Any dead cell with three live neighbours becomes a live cell.
+	3 =
+    else
+	\ Any live cell with two or three live neighbours survives.
+        dup 2 >= swap 3 <= and
+    then
+    if
+        1 col @ row @ next!
+    then ;
+
+: calcRow ( row -- )
+    ['] calcCell colForEach ;
+
+: calcGen ( -- )
+    nextErase
+    ['] calcRow rowForEach
+    moveCurr ;
+
+: life ( generations -- )
     ;
 
 : glider s"  *|  *|***" >curr ;
