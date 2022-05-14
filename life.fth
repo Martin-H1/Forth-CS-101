@@ -2,8 +2,8 @@
 \ See http://en.wikipedia.org/wiki/Conway's_Game_of_Life
 
 \ constants for board height and width
-16 constant height
-16 constant width
+24 constant height
+32 constant width
 height width * constant size
 
 \ allocate two arrays to hold current and next generations
@@ -22,13 +22,12 @@ variable col
 : rowAtEnd?
     row @ height >= ;
 
-: rowForEach ( token -- )
-    >r
+: rowForEach ( xt -- )
     rowFirst
     begin
-	r@ execute rowNext rowAtEnd?
+	dup execute rowNext rowAtEnd?
     until
-    rdrop ;
+    drop ;
 
 \ Returns index of the row after current using wrap around.
 : row+ ( -- index )
@@ -46,13 +45,12 @@ variable col
 : colAtEnd?
     col @ width >= ;
 
-: colForEach ( token -- )
-    >r
+: colForEach ( xt -- )
     colFirst
     begin
-	r@ execute colNext colAtEnd?
+	dup execute colNext colAtEnd?
     until
-    rdrop ;
+    drop ;
 
 \ Returns index of the column after current using wrap around.
 : col+ ( -- index )
@@ -66,6 +64,10 @@ variable col
 : moveCurr ( -- )
     gen_next gen_curr size move ;
 
+\ clears curr array to clear out junk in ram
+: currErase ( -- )
+    gen_curr size erase ;
+
 \ retrieve a cell value from the current generation
 : curr@ ( col row -- n )
     width * + gen_curr + c@ ;
@@ -77,6 +79,7 @@ variable col
 \ Parses a pattern string into current board.
 \ This function is unsafe and will over write memory.
 : >curr ( addr count -- )
+    currErase
     rowFirst colFirst
     1-
     for
@@ -94,24 +97,19 @@ variable col
     next
     drop ;
 
-: .cell ( row -- )
-    col @ over curr@ . ;
+: .cell ( -- )
+    col @ row @ curr@
+    if '*' else '.' then
+    emit ;
 
 \ prints the row from the current generation to output
 : .currRow ( -- )
-    cr row @
-    ['] .cell colForEach
-    drop ;
+    cr ['] .cell colForEach ;
 
 \ Prints the current board generation to standard output
 : .curr
-    ['] .currRow
-    rowForEach
+    ['] .currRow rowForEach
     cr ;
-
-\ clears next array for the subsequent generation computation
-: nextErase ( -- )
-    gen_next size erase ;
 
 \ retrieve a cell value from the current generation
 : next@ ( col row -- n )
@@ -135,9 +133,8 @@ variable col
 : calcCell ( -- )
     calcSum
 
-    \ The board was initialized to zeros. So unless explicitly marked live,
-    \ all cells die in the next generation. There are two rules we'll apply
-    \ to mark a cell live.
+    \ Unless explicitly marked live, all cells die in the next generation.
+    \ There are two rules we'll apply to mark a cell live.
 
     \ Is the current cell dead?
     col @ row @ curr@ 0=
@@ -148,19 +145,25 @@ variable col
 	\ Any live cell with two or three live neighbours survives.
         dup 2 >= swap 3 <= and
     then
-    if
-        1 col @ row @ next!
-    then ;
+    1 and
+    col @ row @ next! ;
 
 : calcRow ( row -- )
     ['] calcCell colForEach ;
 
 : calcGen ( -- )
-    nextErase
     ['] calcRow rowForEach
     moveCurr ;
 
-: life ( generations -- )
-    ;
+: life ( -- )
+    begin calcGen .curr key? until ;
 
+: blinker s" |***" >curr ;
+: toad s" ***| ***" >curr ;
+: pentomino s" **| **| *" >curr ;
+: pi s" **| **|**" >curr ;
 : glider s"  *|  *|***" >curr ;
+: pulsar s" *****|*   *" >curr ;
+: ship s"  ****|*   *|    *|   *" >curr ;
+: pentadecathalon s" **********" >curr ;
+: clock s"  *|  **|**|  *" >curr ;
