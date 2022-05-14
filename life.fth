@@ -158,6 +158,7 @@ variable col
 : life ( -- )
     begin calcGen .curr key? until ;
 
+\ Test cases taken from Rosetta code's implementation
 : blinker s" |***" >curr ;
 : toad s" ***| ***" >curr ;
 : pentomino s" **| **| *" >curr ;
