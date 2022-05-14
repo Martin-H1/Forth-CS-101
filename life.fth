@@ -85,7 +85,7 @@ variable col
     for
         dup c@
         dup '|' <> if
-            32 <> 1 and
+            bl <> 1 and
             col @ row @ curr!
 	    colNext
 	else
