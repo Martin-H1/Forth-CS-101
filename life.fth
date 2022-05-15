@@ -14,14 +14,18 @@ create gen_next size allot
 variable row
 variable col
 
-: rowFirst 0 row ! ;
+\ Sets the row offset to zero
+: rowFirst ( -- ) 0 row ! ;
 
-: rowNext
-    1 row +! ;
+\ Advances the offset by the width.
+: rowNext ( -- )
+    width row +! ;
 
+\ At end if current offset exceeds array size.
 : rowAtEnd?
-    row @ height >= ;
+    row @ size >= ;
 
+\ Iterator used to apply a function to the rows.
 : rowForEach ( xt -- )
     rowFirst
     begin
@@ -31,11 +35,11 @@ variable col
 
 \ Returns index of the row after current using wrap around.
 : row+ ( -- index )
-    row @ 1 + height mod ;
+    row @ width + size mod ;
 
 \ Returns index of the column before current using wrap around.
 : row- ( -- index )
-    row @ 1 - height mod ;
+    row @ width - size mod ;
 
 : colFirst 0 col ! ;
 
@@ -70,11 +74,11 @@ variable col
 
 \ retrieve a cell value from the current generation
 : curr@ ( col row -- n )
-    width * + gen_curr + c@ ;
+    + gen_curr + c@ ;
 
 \ stores a value into a cell from the current generation
 : curr! ( n col row -- )
-    width * + gen_curr + c! ;
+    + gen_curr + c! ;
 
 \ Parses a pattern string into current board.
 \ This function is unsafe and will over write memory.
@@ -111,13 +115,13 @@ variable col
     ['] .currRow rowForEach
     cr ;
 
-\ retrieve a cell value from the current generation
+\ retrieve a cell value from the next generation
 : next@ ( col row -- n )
-    width * + gen_next + c@ ;
+    + gen_next + c@ ;
 
 \ stores a cell into the next generation
 : next! ( n col row -- )
-    width * + gen_next + c! ;
+    + gen_next + c! ;
 
 \ computes the sum of the neigbors of the current cell.
 : calcSum ( -- n )
@@ -156,7 +160,8 @@ variable col
     moveCurr ;
 
 : life ( -- )
-    begin calcGen .curr key? until ;
+    page
+    begin calcGen 0 0 at-xy .curr key? until ;
 
 \ Test cases taken from Rosetta code's implementation
 : blinker s" |***" >curr ;
