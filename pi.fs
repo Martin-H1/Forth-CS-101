@@ -31,7 +31,7 @@ variable n
 
 \ calculates a single scaled quotient term 
 : quotient ( -- q )
-  four denominator / ;
+  four denominator U/ ;
 
 \ calculates Qn - Qn+1
 : calc_term ( -- q )
