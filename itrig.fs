@@ -111,36 +111,29 @@ MAX_SINE negate constant MIN_SINE
      1 swap
   then
 
-  \ push angle correction factors on the stack
-  ACUTE_ANGLE			\ 45
-  dup 2/			\ 22.5
-  dup 2/			\ 11.25
-  dup 2/			\ 5.625
-  dup 2/			\ 2.8125
-  dup 2/			\ 1.40625
-  dup 2/			\ 0.706125
-  dup 2/			\ 0.3515625
-  0
-
-  \ move all but first to return stack
-  >r >r >r >r >r >r >r >r
+  ACUTE_ANGLE			\ 45 first approximation on data stack
+  dup 2/ >r			\ 22.5 correction factor on return stack
 
   \ data stack has ( sign value approximation )
   begin
-    r> dup >r 0 >		\ loop until correction reaches zero
+    r@ 0 >			\ loop until correction factor reaches zero
   while
-    dup >r sine
-    2dup =
+    dup >r sine			\ stack has (sign, value, approximation)
+    over =
     if				\ exact match, terminate loop
-      exit
+      r> r> drop
+      0 >r			\ set correction factor to zero.
     else			\ otherwise adjust with correction factor
-      2dup >
+      r@ sine			\ stack has (sign, value, approximation )
+      over <
       if
-        drop
-        r> r> +			\ approximation too small, add the correction
+        r> r>
+	dup 2/ >r		\ halve correction factor
+	+			\ approximation too small, add the correction
       else
-        drop
-        r> r> -			\ approximation too large, subtract correction
+        r> r>
+	dup 2/ >r		\ halve correction factor
+	-			\ approximation too large, subtract correction
       then
     then
   repeat
