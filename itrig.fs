@@ -39,7 +39,7 @@ create sineTable
 \ clampAngle takes brads as input and returns an angle that is positive and
 \ always less than a FULL_ROTATION. That way we can be sure to use the angle
 \ as an index into the trig table.
-: clampAngle ( angle - angle between 0000 to 0400 hex )
+: clampAngle ( angle - angle between 0 to full rotation )
   FULL_ROTATION
   mod ;
 
@@ -80,7 +80,7 @@ create sineTable
   sine ;
 
 RIGHT_ANGLE sine constant MAX_SINE
-MAX_SINE negate constant MIN_SINE
+RIGHT_ANGLE negate sine constant MIN_SINE
 
 \ clamps n between max and min to prevent inverse trig function overflow.
 : clampSine ( n -- clamped_value )
@@ -111,8 +111,8 @@ MAX_SINE negate constant MIN_SINE
      1 swap
   then
 
-  ACUTE_ANGLE			\ 45 first approximation on data stack
-  dup 2/ >r			\ 22.5 correction factor on return stack
+  ACUTE_ANGLE			\ 45° first approximation on data stack
+  dup 2/ >r			\ 22.5° correction factor on return stack
 
   \ data stack has ( sign value approximation )
   begin
@@ -140,5 +140,12 @@ MAX_SINE negate constant MIN_SINE
   r> drop			\ clean up return stack
   swap drop			\ drop input argument
   * ;				\ restore the sign
+
+\ arccosine is defined in terms of arcsin with coordinate rotation.
+: arccosine
+  arcsine
+  RIGHT_ANGLE
+  -
+  negate ;
 
 decimal
