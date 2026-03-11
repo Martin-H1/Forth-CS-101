@@ -17,9 +17,12 @@
 \    = 3.14088134088
 
 \ normally this requires floating point arithmetic, but we're using fixed point
-\ multiplying by a scaling factor and returned as a ratio.
+\ multiplying by a scaling factor and returned as a ratio. We'll use 3 integer
+\ bits and the remainder of the cell for fractional bits.
 
-1 13 lshift constant rescale
+1      	       		 \ Bit to shift to create rescale factor
+cell 8 * 3 -   		 \ Calculate the number of fractional bits
+lshift constant rescale	 \ Use rescale to create fixed point constants.
 rescale 3 * constant three
 rescale 4 * constant four
 
@@ -38,7 +41,7 @@ variable n
   quotient quotient - ;
 
 \ Computes pi as a ratio of integers
-: pi ( -- numerator denominator )
+: calc_pi ( -- numerator denominator )
   2 n !
   three
   begin
@@ -46,3 +49,9 @@ variable n
   repeat
   drop
   rescale ;
+
+: print_pi
+  calc_pi swap
+  cr
+  ." Pi = " . ." / " . cr
+  ." N = " n . cr ;
