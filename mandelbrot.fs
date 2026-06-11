@@ -1,80 +1,80 @@
 \ Setup constants to remove magic numbers to allow
 \ for greater zoom with different scale factors.
-20  CONSTANT MAXITER
--39 CONSTANT MINVAL
-40  CONSTANT MAXVAL
-20 5 lshift CONSTANT RESCALE
-RESCALE 4 * CONSTANT S_ESCAPE
+20  constant MAXITER
+-39 constant MINVAL
+40  constant MAXVAL
+20 5 lshift constant RESCALE
+RESCALE 4 * constant S_ESCAPE
 
 \ These variables hold values during the escape calculation.
-VARIABLE CREAL
-VARIABLE CIMAG
-VARIABLE ZREAL
-VARIABLE ZIMAG
-VARIABLE COUNT
+variable c-real
+variable c-imag
+variable z-real
+variable z-imag
+variable iters
 
 \ Compute squares, but rescale to remove extra scaling factor.
-: ZR_SQ ZREAL @ DUP RESCALE */ ;
-: ZI_SQ ZIMAG @ DUP RESCALE */ ;
+: zr_sq z-real @ dup RESCALE */ ;
+: zi_sq z-imag @ dup RESCALE */ ;
 
 \ Translate escape count to ascii greyscale.
-: .CHAR
-  S" ..,'~!^:;[/<&?oxOX#   "
-  DROP + 1
-  TYPE ;
+: .char
+  s" ..,'~!^:;[/<&?oxOX#   "
+  drop + 1
+  type ;
 
 \ Numbers above 4 will always escape, so compare to a scaled value.
-: ESCAPES?
+: escapes?
   S_ESCAPE > ;
 
 \ Increment count and compare to max iterations.
-: COUNT_AND_TEST?
-  COUNT @ 1+ DUP COUNT !
+: count_and_test?
+  iters @ 1+ dup iters !
   MAXITER > ;
 
 \ stores the row column values from the stack for the escape calculation.
-: INIT_VARS
-  5 lshift DUP CREAL ! ZREAL !
-  5 lshift DUP CIMAG ! ZIMAG !
-  1 COUNT ! ;
+: init_vars
+  5 lshift dup c-real ! z-real !
+  5 lshift dup c-imag ! z-imag !
+  1 iters ! ;
 
 \ Performs a single iteration of the escape calculation.
-: DOESCAPE
-    ZR_SQ ZI_SQ 2DUP +
-    ESCAPES? IF
-      2DROP
-      TRUE
-    ELSE
-      - CREAL @ +   \ leave result on stack
-      ZREAL @ ZIMAG @ RESCALE */ 1 lshift
-      CIMAG @ + ZIMAG !
-      ZREAL !                   \ Store stack item into ZREAL
-      COUNT_AND_TEST?
-    THEN ;
+: doescape
+    zr_sq zi_sq 2dup +
+    escapes? if
+      2drop
+      true
+    else
+      - c-real @ +   \ leave result on stack
+      z-real @ z-imag @ RESCALE */ 1 lshift
+      c-imag @ + z-imag !
+      z-real !                   \ Store stack item into z-real
+      count_and_test?
+    then ;
 
 \ Iterates on a single cell to compute its escape factor.
-: DOCELL
-  INIT_VARS
-  BEGIN
-    DOESCAPE
-  UNTIL
-  COUNT @
-  .CHAR ;
+: docell
+  init_vars
+  begin
+    doescape
+  until
+  iters @
+  .char ;
 
 \ For each cell in a row.
-: DOROW
-  MAXVAL MINVAL DO
-    DUP I
-    DOCELL
-  LOOP
-  DROP ;
+: dorow
+  MAXVAL MINVAL do
+    dup I
+    docell
+  loop
+  drop ;
 
 \ For each row in the set.
-: MANDELBROT
-  CR
-  MAXVAL MINVAL DO
-    I DOROW CR
-  LOOP ;
+: mandelbrot
+  cr
+  MAXVAL MINVAL do
+    i dorow cr
+  loop ;
 
 \ Run the computation.
-MANDELBROT
+mandelbrot
