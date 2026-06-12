@@ -1,10 +1,23 @@
-\ Setup constants to remove magic numbers to allow
-\ for greater zoom with different scale factors.
-20  constant MAXITER
--39 constant MINVAL
-40  constant MAXVAL
-20 5 lshift constant RESCALE
-RESCALE 4 * constant S_ESCAPE
+\ Calculate the Mandelbot set using complex numbers. Normally this requires
+\ floating point arithmetic, but we'll use fixed point and multiply by a
+\ scaling factor. Since the Mandelbrot set lies within -2, -2i to +2, 2i,
+\ we need at least one sign bit and two integer bits. However, the escape
+\ calculation requires more bits to avoid an overflow. So seven bits should
+\ be plenty. This allows the remaining bits to be used for fractional bits.
+
+\ Setup constants to remove magic numbers. Interogate the runtime with cell
+\ to determine machine precision. This allows greater zoom with different
+\ scale factors.
+
+1                        \ Bit to shift to create rescale factor
+cell 8 *                 \ Compute number of bits in a cell.
+7 -                      \ Calculate the number of fractional bits
+lshift       constant RESCALE
+RESCALE -2 * constant MINVAL
+RESCALE  2 * constant MAXVAL
+20           constant MAXITER
+RESCALE 4 *  constant S_ESCAPE
+MAXVAL MINVAL - 80 / constant STEP
 
 \ These variables hold values during the escape calculation.
 variable c-real
@@ -34,8 +47,8 @@ variable iters
 
 \ stores the row column values from the stack for the escape calculation.
 : init_vars
-  5 lshift dup c-real ! z-real !
-  5 lshift dup c-imag ! z-imag !
+  dup c-real ! z-real !
+  dup c-imag ! z-imag !
   1 iters ! ;
 
 \ Performs a single iteration of the escape calculation.
@@ -64,9 +77,10 @@ variable iters
 \ For each cell in a row.
 : dorow
   MAXVAL MINVAL do
-    dup I
+    dup i
     docell
-  loop
+    STEP
+  +loop
   drop ;
 
 \ For each row in the set.
@@ -74,7 +88,8 @@ variable iters
   cr
   MAXVAL MINVAL do
     i dorow cr
-  loop ;
+    STEP
+  +loop ;
 
 \ Run the computation.
 mandelbrot
