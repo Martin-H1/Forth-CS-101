@@ -54,4 +54,4 @@ variable n
   calc_pi swap
   cr
   ." Pi = " . ." / " . cr
-  ." N = " n . cr ;
+  ." N = " n @ . cr ;
