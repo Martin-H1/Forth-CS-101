@@ -1,13 +1,22 @@
-10000  constant BN-BASE      \ base - 4 decimal digits per cell
-125    constant BN-CELLS     \ 125 cells * 4 digits = 500 digits
-                             \ +5 extra for carry margin
-130    constant BN-SIZE      \ total cells allocated per bignum
+\ Calculate Pi using bignums and Machin's formula:
+\ Pi = 16*arctan(1/5) - 4*arctan(1/239)
+\ Which is computable with the arctangent series (Gregory's series):
+\ arctan (x) = (x^1)/1 - (x^3)/3 + (x^5)/5 - (x^7)/7 + .. + -1^n*(x^2n+1)/(2n+1)
+
+\ Use exp to calculate decimal digits in a cell.
+: exp ( base exp -- result )
+    over swap 1 ?do over * loop nip ;
+
+cell 2 *         constant BN-DIGITS \ decimal digits per cell
+10 BN-DIGITS exp constant BN-BASE   \ Compute largest base that fits in a cell.
+125              constant BN-CELLS  \ 125 cells * 4 digits = 500 digits
+                                    \ +5 extra for carry margin
+130              constant BN-SIZE   \ total cells allocated per bignum
 
 variable bn-carry            \ scratch for bn*
 variable bn-rem              \ scratch for bn/rem
 variable bn-a                \ scratch for bn+
 variable bn-b
-
 
 \ ---------------------------------------------------------------------------
 \ bignum ( -- )
@@ -153,25 +162,42 @@ variable bn-b
 
 \ ---------------------------------------------------------------------------
 \ bn. ( a -- )
-\ Print 500 decimal digits. Most significant cell first.
+\ Print BN-DIGITS decimal digits. Most significant cell first.
 \ First cell printed without leading zeros, rest with leading zeros.
 \ ---------------------------------------------------------------------------
+variable bn-row-cnt
+variable bn-total
 variable bn-leading
 : bn. ( a -- )
+    0 bn-row-cnt !
+    0 bn-total !
     false bn-leading !
     BN-SIZE 0 do
         BN-SIZE 1 - i -
         cells over +
         @
         bn-leading @ if
-            0 <# # # # # #> type        \ zero-padded 4 digits, no trailing space
+            \ 0-padded BN-DIGITS digits, no trailing space
+            0 <# BN-DIGITS 0 do # loop #> type
+            BN-DIGITS bn-row-cnt +!
+            BN-DIGITS bn-total +!
         else
             dup 0<> if
+                1 bn-row-cnt +!
+                1 bn-total +!
                 true bn-leading !
-                0 <# #S #> type          \ no leading zeros, no trailing space
+                space space 0 <# #S #> type ." ." cr
+                bn-total @ 4 u.r ." :" space
             else
-                drop
+                drop space
             then
+        then
+        bn-leading @
+        bn-row-cnt @ 63 >
+        and
+        if
+            cr bn-total @ 4 u.r ." :" space
+	    0 bn-row-cnt !
         then
     loop
     drop
@@ -180,14 +206,13 @@ variable bn-leading
     then
 ;
 
-500 constant DIGITS     \ SCALE = 10^500 as a bignum - need to construct this
+BN-DIGITS BN-CELLS * constant DIGITS    \ SCALE = 10^DIGITS as a bignum
 
 variable ar-x           \ x in arctan(1/x)
 variable ar-x2          \ x squared
 variable ar-i           \ current odd term index: 1, 3, 5, 7, ...
 variable ar-sign        \ true = next term subtracts, false = next term adds
 
-bignum pi-result
 bignum scale
 bignum scratch1
 bignum scratch2
@@ -205,7 +230,7 @@ bignum term
 \ arctan (x) = (x^1)/1 - (x^3)/3 + (x^5)/5 - (x^7)/7 + .. + -1^n*(x^2n+1)/(2n+1)
 
 \ Computes the arctanget of the reciprocal of x
-: arctan-recip ( x -- )
+: arctan-recip ( x -- bn-addr )
     dup ar-x !
     dup *
     ar-x2 !
@@ -228,25 +253,24 @@ bignum term
         then
         ar-sign @ 0= ar-sign !
     repeat
+    sum
 ;
 
 \ Calculate Pi using bignums and Machin's formula:
 \ Pi = 16*arctan(1/5) - 4*arctan(1/239)
 \ Note: compute using fixed point and a scale factor
-: calc-pi ( -- )
-    5 arctan-recip
-    sum scratch2 bn!
+: calc-pi ( -- bn-addr )
+    5 arctan-recip scratch2 bn!
     16 scratch2 bn*
-    239 arctan-recip
-    4 sum bn*
-    sum scratch2 bn-
-    scratch2 pi-result bn!
+    239 arctan-recip scratch1 bn!
+    4 scratch1 bn*
+    scratch1 scratch2 bn-
+    scratch2
 ;
 
 : print-pi ( -- )
-    cr ." Pi to 500 digits:" cr
-    calc-pi
-    ." pi = " pi-result bn. cr
+    cr ." Pi to " DIGITS . ." digits:" cr
+    calc-pi bn. cr
 ;
 
 make-scale              \ Initialize scale constant
