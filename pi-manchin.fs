@@ -197,7 +197,7 @@ variable bn-leading
         and
         if
             cr bn-total @ 4 u.r ." :" space
-	    0 bn-row-cnt !
+            0 bn-row-cnt !
         then
     loop
     drop
