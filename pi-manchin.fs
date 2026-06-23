@@ -7,7 +7,7 @@
 : exp ( base exp -- result )
     over swap 1 ?do over * loop nip ;
 
-cell 2 *         constant BN-DIGITS \ decimal digits per cell
+1 cells 2 *      constant BN-DIGITS \ decimal digits per cell
 10 BN-DIGITS exp constant BN-BASE   \ Compute largest base that fits in a cell.
 125              constant BN-CELLS  \ 125 cells * 4 digits = 500 digits
                                     \ +5 extra for carry margin
